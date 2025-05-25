@@ -1,0 +1,1 @@
+class e{constructor(t,i){this.view=t,this.model=i,this.init()}async init(){this.view.showLoading();try{const t=await this.model.getAllStories();this.view.render(t)}catch(t){this.view.showError(t.message),this.view.onRetry(()=>this.init())}}}export{e as StoryPresenter};
