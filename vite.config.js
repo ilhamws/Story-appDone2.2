@@ -4,7 +4,7 @@ import postcssImport from 'postcss-import'
 import autoprefixer from 'autoprefixer'
 
 export default defineConfig({
-  base: '/Story-appDone2.2/',
+  base: './',
   css: {
     postcss: {
       plugins: [

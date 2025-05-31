@@ -278,3 +278,149 @@ body {
   overflow-x: hidden;
 }
 
+/* Application Shell */
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell header, 
+.app-shell footer {
+  flex-shrink: 0;
+}
+
+.app-shell main {
+  flex-grow: 1;
+}
+
+/* Offline mode styling */
+body.offline {
+  position: relative;
+}
+
+body.offline::before {
+  content: 'Offline Mode';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #f39c12;
+  color: white;
+  text-align: center;
+  padding: 4px;
+  font-size: 14px;
+  z-index: 1000;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Improved styles for button components */
+notification-button,
+favorite-button {
+  display: inline-block;
+}
+
+/* View transitions */
+.view-transition {
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
+.view-transition.fade-in {
+  animation-name: fadeIn;
+}
+
+.view-transition.fade-out {
+  animation-name: fadeOut;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-20px); }
+}
+
+/* Story cards in offline mode */
+body.offline .story-card {
+  position: relative;
+  overflow: hidden;
+}
+
+body.offline .story-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  border-width: 0 50px 50px 0;
+  border-style: solid;
+  border-color: transparent #f39c12 transparent transparent;
+}
+
+/* Customize PWA Install button */
+#pwa-install-button {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  animation: bounce 1s infinite alternate;
+}
+
+#pwa-install-button.show {
+  display: block;
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-5px); }
+}
+
+/* Make sure notifications are always on top */
+#notification,
+#notification-message,
+#global-notification,
+#sync-notification,
+#sw-refresh-notification {
+  z-index: 2000 !important;
+}
+
+/* Add offline placeholder for images */
+body.offline img.story-image {
+  position: relative;
+}
+
+body.offline img.story-image:not([src^="data:"]):not([src^="blob:"]) {
+  filter: grayscale(100%) brightness(0.8);
+}
+
+body.offline img.story-image:not([src^="data:"]):not([src^="blob:"])::before {
+  content: 'Offline';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+

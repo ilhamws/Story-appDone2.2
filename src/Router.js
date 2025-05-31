@@ -5,6 +5,7 @@ export class Router {
       '/stories': this.createStoryPresenter.bind(this),
       '/stories/:id': this.createStoryDetailPresenter.bind(this),
       '/add-story': this.createAddStoryPresenter.bind(this),
+      '/favorites': this.createFavoriteStoriesPresenter.bind(this),
       '/login': this.createAuthPresenter.bind(this),
       '/register': this.createAuthPresenter.bind(this),
       '/404': this.createNotFoundPresenter.bind(this)
@@ -42,6 +43,15 @@ export class Router {
     const model = new StoryData();
     const { AddStoryPresenter } = await import('@/presenters/AddStoryPresenter.js');
     return new AddStoryPresenter(view, model);
+  }
+
+  async createFavoriteStoriesPresenter() {
+    const { FavoriteStoriesView } = await import('@/views/FavoriteStoriesView.js');
+    const { StoryDatabase } = await import('@/services/StoryDatabase.js');
+    const view = new FavoriteStoriesView();
+    const storyDatabase = new StoryDatabase();
+    const { FavoriteStoriesPresenter } = await import('@/presenters/FavoriteStoriesPresenter.js');
+    return new FavoriteStoriesPresenter(view, storyDatabase);
   }
 
   async createAuthPresenter(mode) {

@@ -1,4 +1,6 @@
 import { IndexedDBUtil } from '@/utils/idb';
+import { UserSession } from '@/services/UserSession';
+import { API_BASE_URL } from '@/utils/config';
 
 export class StoryDatabase {
   constructor() {
@@ -30,7 +32,8 @@ export class StoryDatabase {
             name: 'offlineStories',
             keyPath: 'tempId',
             indexes: [
-              { name: 'createdAt', keyPath: 'createdAt', unique: false }
+              { name: 'createdAt', keyPath: 'createdAt', unique: false },
+              { name: 'status', keyPath: 'status', unique: false }
             ]
           }
         ]
@@ -89,10 +92,18 @@ export class StoryDatabase {
         ...story,
         tempId: `temp-${Date.now()}`,
         createdAt: new Date().toISOString(),
-        isOffline: true
+        isOffline: true,
+        status: 'pending' // pending, synced, failed
       };
       
       await this.dbUtil.saveData('offlineStories', tempStory);
+      
+      // Trigger background sync if available
+      if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.sync.register('sync-stories');
+      }
+      
       return tempStory;
     } catch (error) {
       console.error('Failed to save offline story:', error);
@@ -110,6 +121,130 @@ export class StoryDatabase {
       console.error('Failed to get offline stories:', error);
       throw error;
     }
+  }
+
+  async updateOfflineStoryStatus(tempId, status, serverId = null) {
+    await this.init();
+    
+    try {
+      const story = await this.dbUtil.getData('offlineStories', tempId);
+      if (!story) {
+        throw new Error(`Offline story with tempId ${tempId} not found`);
+      }
+      
+      const updatedStory = {
+        ...story,
+        status,
+        id: serverId || story.id
+      };
+      
+      await this.dbUtil.saveData('offlineStories', updatedStory);
+      return updatedStory;
+    } catch (error) {
+      console.error(`Failed to update offline story status with tempId ${tempId}:`, error);
+      throw error;
+    }
+  }
+
+  async syncOfflineStories() {
+    await this.init();
+    
+    if (!navigator.onLine) {
+      console.log('Device is offline, cannot sync stories');
+      return false;
+    }
+    
+    try {
+      const pendingStories = await this.getPendingOfflineStories();
+      
+      if (pendingStories.length === 0) {
+        console.log('No pending offline stories to sync');
+        return true;
+      }
+      
+      console.log(`Found ${pendingStories.length} pending offline stories to sync`);
+      
+      const token = UserSession.getToken();
+      if (!token) {
+        console.error('No authentication token found');
+        return false;
+      }
+      
+      for (const story of pendingStories) {
+        try {
+          console.log(`Syncing offline story: ${story.tempId}`);
+          
+          // Implementasi API upload sebenarnya akan dilakukan di sini
+          // Untuk contoh, kita anggap berhasil
+          const response = await this.simulateApiUpload(story);
+          
+          if (response.success) {
+            // Update status dan simpan ID dari server
+            await this.updateOfflineStoryStatus(story.tempId, 'synced', response.id);
+            
+            // Simpan cerita yang sudah disinkronkan ke store stories
+            if (response.story) {
+              await this.dbUtil.saveData('stories', response.story);
+            }
+          } else {
+            await this.updateOfflineStoryStatus(story.tempId, 'failed');
+          }
+        } catch (error) {
+          console.error(`Failed to sync offline story ${story.tempId}:`, error);
+          await this.updateOfflineStoryStatus(story.tempId, 'failed');
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to sync offline stories:', error);
+      return false;
+    }
+  }
+
+  async getPendingOfflineStories() {
+    await this.init();
+    
+    try {
+      const transaction = this.dbUtil.db.transaction('offlineStories', 'readonly');
+      const store = transaction.objectStore('offlineStories');
+      const index = store.index('status');
+      const request = index.getAll('pending');
+      
+      return new Promise((resolve, reject) => {
+        request.onerror = () => reject(new Error('Failed to get pending offline stories'));
+        request.onsuccess = () => resolve(request.result);
+      });
+    } catch (error) {
+      console.error('Failed to get pending offline stories:', error);
+      throw error;
+    }
+  }
+
+  // Simulasi API upload untuk tujuan demonstrasi
+  async simulateApiUpload(story) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const success = Math.random() > 0.2; // 80% chance of success
+        
+        if (success) {
+          resolve({
+            success: true,
+            id: `server-${Date.now()}`,
+            story: {
+              ...story,
+              id: `server-${Date.now()}`,
+              isOffline: false
+            }
+          });
+        } else {
+          resolve({
+            success: false,
+            error: 'Simulasi kegagalan API'
+          });
+        }
+      }, 1000);
+    });
   }
 
   async deleteOfflineStory(tempId) {

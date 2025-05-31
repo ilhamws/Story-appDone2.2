@@ -6,48 +6,61 @@
   <title>Story App</title>
   <meta name="description" content="Aplikasi untuk berbagi cerita dan pengalaman">
   <meta name="theme-color" content="#3498db">
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/src/assets/icons/icon-192x192.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./src/assets/icons/icon-192x192.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="/src/assets/styles/main.css">
-  <link rel="icon" href="/src/assets/icons/favicon.ico">
+  <link rel="stylesheet" href="./src/assets/styles/main.css">
+  <link rel="icon" href="./src/assets/icons/favicon.ico">
 </head>
 <body>
-  <skip-to-content></skip-to-content>
+  <div class="app-shell">
+    <skip-to-content></skip-to-content>
+    
+    <header>
+      <nav class="container">
+        <a href="#/" class="logo-link">
+          <img src="./Logo.png" alt="Story App Logo" class="logo">
+        </a>
+        <ul class="nav-links">
+          <li><a href="#/" data-current="page">Home</a></li>
+          <li><a href="#/add-story" data-auth>Add Story</a></li>
+          <li><a href="#/favorites" data-auth>Favorites</a></li>
+          <li><a href="#/login" data-unauth>Login</a></li>
+          <li><a href="#/register" data-unauth>Register</a></li>
+          <li><a href="#" id="logout-button" data-auth>Logout</a></li>
+        </ul>
+      </nav>
+    </header>
+
+    <main id="app" class="view-transition" tabindex="-1"></main>
+    
+    <section id="stories-location" tabindex="-1" class="map-section">
+      <div class="container">
+        <h2>Stories Location</h2>
+        <div id="map" style="height: 500px;"></div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <p>&copy; 2025 Story App. All rights reserved.</p>
+        <notification-button></notification-button>
+      </div>
+    </footer>
+  </div>
   
-  <header>
-    <nav class="container">
-      <a href="#/" class="logo-link">
-        <img src="/Logo.png" alt="Story App Logo" class="logo">
-      </a>
-      <ul class="nav-links">
-        <li><a href="#/" data-current="page">Home</a></li>
-        <li><a href="#/add-story" data-auth>Add Story</a></li>
-        <li><a href="#/login" data-unauth>Login</a></li>
-        <li><a href="#/register" data-unauth>Register</a></li>
-        <li><a href="#" id="logout-button" data-auth>Logout</a></li>
-      </ul>
-    </nav>
-  </header>
+  <button id="pwa-install-button">Install App</button>
 
-  <main id="app" class="view-transition" tabindex="-1"></main>
-  
-  <section id="stories-location" tabindex="-1" class="map-section">
-    <div class="container">
-      <h2>Stories Location</h2>
-      <div id="map" style="height: 500px;"></div>
+  <script type="module" src="./src/components/SkipToContent.js"></script>
+  <script type="module" src="./src/components/NotificationButton.js"></script>
+  <script type="module" src="./src/components/FavoriteButton.js"></script>
+  <script type="module" src="./src/main.js"></script>
+
+  <noscript>
+    <div class="noscript-message">
+      <h2>JavaScript Disabled</h2>
+      <p>This application requires JavaScript to function properly. Please enable JavaScript in your browser settings.</p>
     </div>
-  </section>
-
-  <footer>
-    <div class="container">
-      <p>&copy; 2025 Story App. All rights reserved.</p>
-    </div>
-  </footer>
-
-  <script type="module" src="/src/components/SkipToContent.js"></script>
-  <script type="module" src="/src/main.js"></script>
-
-
+  </noscript>
 </body>
 </html>

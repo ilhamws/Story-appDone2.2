@@ -1,11 +1,8 @@
-import { MapView } from '@/views/MapView';
 import { MapService } from '@/services/MapService';
 
-export class StoryView {
+export class FavoriteStoriesView {
   constructor() {
     this.app = document.querySelector('#app');
-    this.mapView = new MapView();
-    this.markers = [];
     this.maps = new Map();
   }
 
@@ -13,7 +10,7 @@ export class StoryView {
     this.app.innerHTML = `
       <div class="loading-state" role="alert" aria-busy="true">
         <div class="loading-spinner"></div>
-        <p>Loading stories...</p>
+        <p>Memuat cerita favorit...</p>
       </div>
     `;
   }
@@ -23,7 +20,7 @@ export class StoryView {
       <div class="error-state" role="alert">
         <h2>Error</h2>
         <p>${message}</p>
-        <button class="button retry-button">Try Again</button>
+        <button class="button retry-button">Coba Lagi</button>
       </div>
     `;
   }
@@ -32,9 +29,9 @@ export class StoryView {
     if (stories.length === 0) {
       this.app.innerHTML = `
         <div class="empty-state">
-          <h2>No Stories Found</h2>
-          <p>Be the first to share your story!</p>
-          <a href="#/add-story" class="button">Add Story</a>
+          <h2>Tidak Ada Cerita Favorit</h2>
+          <p>Tambahkan cerita ke favorit untuk melihatnya di sini.</p>
+          <a href="#/" class="button">Lihat Semua Cerita</a>
         </div>
       `;
       return;
@@ -42,6 +39,12 @@ export class StoryView {
 
     this.app.innerHTML = `
       <style>
+        .favorites-description {
+          margin-bottom: 20px;
+          color: #555;
+          line-height: 1.5;
+        }
+        
         .story-actions {
           display: flex;
           flex-direction: column;
@@ -63,12 +66,12 @@ export class StoryView {
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .favorites-link-container {
-          margin: 20px 0;
+        .back-link-container {
+          margin: 30px 0;
           text-align: center;
         }
 
-        .favorites-link {
+        .back-link {
           padding: 12px 24px;
           font-size: 1.1rem;
         }
@@ -86,18 +89,15 @@ export class StoryView {
           }
         }
       </style>
-      <div id="stories" class="stories-container">
-        <h1>Stories</h1>
+      <div id="favorite-stories" class="stories-container">
+        <h1>Cerita Favorit</h1>
+        <p class="favorites-description">Berikut adalah cerita-cerita yang telah Anda tambahkan ke favorit. Klik tombol "Hapus dari favorit" untuk menghapus cerita dari daftar favorit.</p>
         <div class="stories-grid">
           ${stories.map(story => this.createStoryCard(story)).join('')}
         </div>
-        <div class="favorites-link-container">
-          <a href="#/favorites" class="button favorites-link">Lihat Cerita Favorit</a>
+        <div class="back-link-container">
+          <a href="#/" class="button back-link">Kembali ke Halaman Utama</a>
         </div>
-      </div>
-      <div class="stories-location-container">
-        <h2>Stories Location</h2>
-        <div id="stories-map" class="stories-map"></div>
       </div>
     `;
 
@@ -114,7 +114,7 @@ export class StoryView {
         ${story.lat && story.lon ? `
           <div class="story-map-container">
             <div id="map-${story.id}" class="story-map"></div>
-            <p id="address-${story.id}" class="story-address" aria-live="polite">Loading location...</p>
+            <p id="address-${story.id}" class="story-address" aria-live="polite">Memuat lokasi...</p>
           </div>
         ` : ''}
         <div class="story-content">
@@ -123,7 +123,7 @@ export class StoryView {
           <div class="story-meta">
             <span class="story-date">${new Date(story.createdAt).toLocaleDateString()}</span>
             <div class="story-actions">
-              <a href="#/stories/${story.id}" class="button story-detail-button">View Detail</a>
+              <a href="#/stories/${story.id}" class="button story-detail-button">Lihat Detail</a>
               <favorite-button 
                 story-id="${story.id}" 
                 story-data='${JSON.stringify(story).replace(/'/g, "&#39;")}'>
@@ -136,25 +136,6 @@ export class StoryView {
   }
 
   async initializeMaps(stories) {
-    try {
-      const mainMap = await MapService.initMap('stories-map', {
-        center: [106.8456, -6.2088],
-        zoom: 10,
-        interactive: true
-      });
-
-      if (mainMap) {
-        stories.forEach(story => {
-          if (story.lat && story.lon) {
-            MapService.addMarker(mainMap, story.lat, story.lon, story.name);
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Failed to initialize main map:', error);
-      this.showMapError('stories-map');
-    }
-
     for (const story of stories) {
       if (story.lat && story.lon) {
         try {
@@ -175,7 +156,7 @@ export class StoryView {
                 this.updateAddress(story.id, address);
               } catch (error) {
                 console.error(`Failed to get address for story ${story.id}:`, error);
-                this.updateAddress(story.id, `Location: ${story.lat.toFixed(4)}, ${story.lon.toFixed(4)}`);
+                this.updateAddress(story.id, `Lokasi: ${story.lat.toFixed(4)}, ${story.lon.toFixed(4)}`);
               }
             }
           }
@@ -200,8 +181,8 @@ export class StoryView {
       container.innerHTML = `
         <div class="map-fallback">
           ${lat && lon ? 
-            `<p>Location: ${lat.toFixed(4)}, ${lon.toFixed(4)}</p>` :
-            `<p>Failed to load map</p>`
+            `<p>Lokasi: ${lat.toFixed(4)}, ${lon.toFixed(4)}</p>` :
+            `<p>Gagal memuat peta</p>`
           }
         </div>
       `;
@@ -221,17 +202,30 @@ export class StoryView {
     // Listen for favorite-changed events
     this.app.addEventListener('favorite-changed', (event) => {
       const { storyId, isFavorite } = event.detail;
-      
-      // Update the UI to reflect the new favorite status
-      const favoriteButton = this.app.querySelector(`.story-card[data-story-id="${storyId}"] favorite-button`);
-      if (favoriteButton) {
-        // The component will update itself, we just need to show a notification
-        const message = isFavorite ? 
-          'Cerita berhasil ditambahkan ke favorit' : 
-          'Cerita berhasil dihapus dari favorit';
+      if (!isFavorite) {
+        // Show confirmation message
+        this.showNotification('Cerita berhasil dihapus dari favorit');
         
-        // Show a temporary notification
-        this.showNotification(message);
+        // Remove the story card from the UI with animation
+        const storyCard = this.app.querySelector(`.story-card[data-story-id="${storyId}"]`);
+        
+        if (storyCard) {
+          // Add fade-out animation
+          storyCard.style.transition = 'opacity 0.5s, transform 0.5s';
+          storyCard.style.opacity = '0';
+          storyCard.style.transform = 'scale(0.8)';
+          
+          // Remove after animation completes
+          setTimeout(() => {
+            storyCard.remove();
+            
+            // Check if there are no more stories
+            const storyCards = this.app.querySelectorAll('.story-card');
+            if (storyCards.length === 0) {
+              this.render([]);
+            }
+          }, 500);
+        }
       }
     });
   }
@@ -288,4 +282,4 @@ export class StoryView {
     });
     this.maps.clear();
   }
-}
+} 

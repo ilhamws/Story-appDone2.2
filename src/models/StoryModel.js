@@ -44,11 +44,47 @@ export class StoryModel {
           return offlineStories;
         }
         
-        throw new Error('Failed to fetch stories: No offline data available');
+        // Jika tidak ada data offline, berikan data dummy
+        const dummyStories = this.getDummyStories();
+        // Simpan data dummy ke IndexedDB untuk penggunaan berikutnya
+        await this.storyDatabase.saveStories(dummyStories);
+        return dummyStories;
       }
     } catch (error) {
       throw new Error('Failed to fetch stories: ' + error.message);
     }
+  }
+
+  getDummyStories() {
+    return [
+      {
+        id: 'dummy-1',
+        name: 'User Demo',
+        description: 'Ini adalah cerita dummy untuk penggunaan offline.',
+        photoUrl: 'https://picsum.photos/id/237/500/300',
+        createdAt: new Date().toISOString(),
+        lat: -6.2088,
+        lon: 106.8456
+      },
+      {
+        id: 'dummy-2',
+        name: 'User Demo',
+        description: 'Cerita dummy kedua untuk penggunaan offline.',
+        photoUrl: 'https://picsum.photos/id/238/500/300',
+        createdAt: new Date(Date.now() - 86400000).toISOString(),
+        lat: -6.1751,
+        lon: 106.8650
+      },
+      {
+        id: 'dummy-3',
+        name: 'User Demo',
+        description: 'Cerita dummy ketiga untuk penggunaan offline.',
+        photoUrl: 'https://picsum.photos/id/239/500/300',
+        createdAt: new Date(Date.now() - 172800000).toISOString(),
+        lat: -6.2000,
+        lon: 106.8300
+      }
+    ];
   }
 
   async getStoryById(id) {
@@ -86,6 +122,13 @@ export class StoryModel {
         
         if (offlineStory) {
           return offlineStory;
+        }
+        
+        // Jika tidak ada data offline dan ID adalah dummy, kembalikan cerita dummy
+        if (id.startsWith('dummy-')) {
+          const dummyStories = this.getDummyStories();
+          const dummyStory = dummyStories.find(story => story.id === id);
+          if (dummyStory) return dummyStory;
         }
         
         throw new Error('Failed to fetch story: No offline data available');
